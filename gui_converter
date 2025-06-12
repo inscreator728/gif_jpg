@@ -1,0 +1,93 @@
+from tkinter import Tk, Label, Entry, Button, filedialog, StringVar, messagebox
+from PIL import Image
+import os
+
+def convert_images(input_folder, output_folder, output_format):
+    """
+    Convert all image files in the input_folder to the specified output_format (JPG or PNG) and save them to the output_folder.
+
+    Args:
+        input_folder (str): Path to the folder containing image files.
+        output_folder (str): Path to the folder where converted files will be saved.
+        output_format (str): Desired output format, either 'JPG' or 'PNG'.
+    """
+    if not os.path.exists(output_folder):
+        os.makedirs(output_folder)
+
+    image_extensions = ['.jpg', '.jpeg', '.png', '.gif', '.bmp', '.tiff', '.webp']
+    image_files = [f for f in os.listdir(input_folder) if os.path.splitext(f)[1].lower() in image_extensions]
+
+    if not image_files:
+        messagebox.showwarning("No Files Found", "No image files found in the input folder.")
+        return
+
+    for image_file in image_files:
+        input_path = os.path.join(input_folder, image_file)
+        base_name = os.path.splitext(image_file)[0]
+
+        if output_format.upper() == 'JPG':
+            output_path = os.path.join(output_folder, base_name + '.jpg')
+        elif output_format.upper() == 'PNG':
+            output_path = os.path.join(output_folder, base_name + '.png')
+
+        try:
+            with Image.open(input_path) as img:
+                if output_format.upper() == 'JPG':
+                    img_converted = img.convert('RGB')
+                    img_converted.save(output_path, 'JPEG')
+                elif output_format.upper() == 'PNG':
+                    img.save(output_path, 'PNG')
+        except Exception as e:
+            messagebox.showerror("Error", f"Error converting {image_file}: {e}")
+
+    messagebox.showinfo("Success", "Image conversion completed successfully!")
+
+def browse_input_folder():
+    folder = filedialog.askdirectory(title="Select Input Folder")
+    input_folder_var.set(folder)
+
+def browse_output_folder():
+    folder = filedialog.askdirectory(title="Select Output Folder")
+    output_folder_var.set(folder)
+
+def start_conversion():
+    input_folder = input_folder_var.get()
+    output_folder = output_folder_var.get()
+    output_format = output_format_var.get()
+
+    if not input_folder or not output_folder or not output_format:
+        messagebox.showwarning("Missing Information", "Please fill in all fields.")
+        return
+
+    if output_format.upper() not in ['JPG', 'PNG']:
+        messagebox.showerror("Invalid Format", "Output format must be either 'JPG' or 'PNG'.")
+        return
+
+    convert_images(input_folder, output_folder, output_format)
+
+def create_gui():
+    root = Tk()
+    root.title("Image Converter")
+
+    global input_folder_var, output_folder_var, output_format_var
+    input_folder_var = StringVar()
+    output_folder_var = StringVar()
+    output_format_var = StringVar()
+
+    Label(root, text="Input Folder:").grid(row=0, column=0, padx=10, pady=5, sticky="e")
+    Entry(root, textvariable=input_folder_var, width=40).grid(row=0, column=1, padx=10, pady=5)
+    Button(root, text="Browse", command=browse_input_folder).grid(row=0, column=2, padx=10, pady=5)
+
+    Label(root, text="Output Folder:").grid(row=1, column=0, padx=10, pady=5, sticky="e")
+    Entry(root, textvariable=output_folder_var, width=40).grid(row=1, column=1, padx=10, pady=5)
+    Button(root, text="Browse", command=browse_output_folder).grid(row=1, column=2, padx=10, pady=5)
+
+    Label(root, text="Output Format (JPG or PNG):").grid(row=2, column=0, padx=10, pady=5, sticky="e")
+    Entry(root, textvariable=output_format_var, width=10).grid(row=2, column=1, padx=10, pady=5, sticky="w")
+
+    Button(root, text="Convert", command=start_conversion).grid(row=3, column=1, pady=10)
+
+    root.mainloop()
+
+if __name__ == "__main__":
+    create_gui()
